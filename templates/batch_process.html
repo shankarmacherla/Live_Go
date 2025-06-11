@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}Batch Processing{% endblock %}
+
+{% block extra_css %}
+<style>
+    .batch-card {
+        border-radius: 10px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .batch-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .progress-container {
+        height: 12px;
+        background: linear-gradient(135deg, #f8faff, #e8f2ff);
+        border: 1px solid rgba(0, 82, 204, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 8px;
+        box-shadow: 0 2px 8px rgba(0, 82, 204, 0.1), inset 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .progress-bar {
+        height: 100%;
+        border-radius: 7px;
+        background: linear-gradient(45deg, #0052cc, #4195ff, #66b3ff);
+        box-shadow: 0 1px 6px rgba(0, 82, 204, 0.3), inset 0 1px 1px rgba(255,255,255,0.3);
+        transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .progress-bar::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { left: -100%; }
+        100% { left: 100%; }
+    }
+
+    .file-drop-area {
+        border: 2px dashed rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        padding: 25px;
+        text-align: center;
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+        cursor: pointer;
+    }
+
+    .file-drop-area.dragover {
+        border-color: #6366f1;
+        background-color: rgba(99, 102, 241, 0.1);
+    }
+
+    .file-list {
+        max-height: 200px;
+        overflow-y: auto;
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 8px;
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .file-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        border-radius: 5px;
+        margin-bottom: 8px;
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .file-item:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .file-item .file-name {
+        flex-grow: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-right: 10px;
+    }
+
+    .file-item .file-icon {
+        margin-right: 10px;
+        color: #6366f1;
+    }
+
+    .file-item .file-size {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.8rem;
+        min-width: 70px;
+        text-align: right;
+    }
+
+    .file-item .remove-file {
+        margin-left: 10px;
+        cursor: pointer;
+        color: #ef4444;
+    }
+
+    .image-preview-thumbnail {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 5px;
+        margin-right: 10px;
+    }
+
+    .batch-actions {
+        display: flex;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .batch-status-badge {
+        padding: 5px 10px;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-left: 10px;
+    }
+
+    .image-status {
+        font-size: 0.8rem;
+        padding: 2px 8px;
+        border-radius: 50px;
+    }
+
+    .time-label {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .batch-details-toggle {
+        cursor: pointer;
+    }
+
+    .batch-details {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.5s ease;
+    }
+
+    .batch-details.expanded {
+        max-height: 1000px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/batch-processing.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="elegant-card">
+        <h1 class="text-center mb-4">Batch Processing</h1>
+        <p class="text-muted text-center mb-4">Process multiple network equipment images at once for efficient analysis</p>
+
+        <!-- Upload Section -->
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="file-drop-area" id="batch-drop-area">
+                    <i class="bi bi-cloud-arrow-up-fill" style="font-size: 3rem; color: #6366f1;"></i>
+                    <h4 class="mt-3">Drop Multiple Images Here</h4>
+                    <p class="text-muted">Or click to select files</p>
+                    <input type="file" id="batch-file-input" accept="image/*" multiple class="d-none">
+                </div>
+
+                <!-- Selected Files List -->
+                <div class="file-list d-none" id="file-list">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="mb-0">Selected Files</h5>
+                        <button id="clear-files" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i> Clear All
+                        </button>
+                    </div>
+                    <div id="file-items-container">
+                        <!-- File items will be added here dynamically -->
+                    </div>
+                </div>
+
+                <!-- Process Button -->
+                <div class="text-center mt-4">
+                    <button id="process-batch" class="btn btn-primary btn-lg" disabled>
+                        <i class="bi bi-gear-fill me-2"></i>Process Batch
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batches List -->
+    <div class="elegant-card mt-5" id="batches-container">
+        <h2 class="mb-4"><i class="bi bi-list-check me-2"></i>Batch Processing Queue</h2>
+
+        <div id="no-batches-message" class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>No batches have been processed yet. Upload multiple images above to start batch processing.
+        </div>
+
+        <div id="batches-list">
+            <!-- Batch items will be added here dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- Batch Details Template (for JavaScript generation) -->
+<template id="batch-template">
+    <div class="batch-card p-4 bg-dark bg-opacity-75" data-batch-id="">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5>
+                    <i class="bi bi-collection me-2"></i>
+                    Batch <span class="batch-id"></span>
+                </h5>
+                <div class="text-muted">
+                    <span class="image-count"></span> images • 
+                    <span class="time-label">Started: </span><span class="start-time"></span>
+                </div>
+            </div>
+            <div class="d-flex align-items-center">
+                <span class="batch-status-badge"></span>
+                <button class="btn btn-sm btn-outline-info ms-3 view-results-btn" style="display: none;">
+                    <i class="bi bi-eye me-1"></i>View Results
+                </button>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <div class="progress-label">
+                    <span class="progress-percentage"></span> complete
+                </div>
+                <div class="time-label">
+                    <span class="elapsed-time"></span>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar"></div>
+            </div>
+        </div>
+
+        <div class="batch-actions">
+            <button class="btn btn-link text-info p-0 batch-details-toggle">
+                <i class="bi bi-chevron-down me-1"></i>
+                <span>Show Details</span>
+            </button>
+        </div>
+
+        <div class="batch-details mt-3">
+            <div class="row image-list">
+                <!-- Image items will be added here dynamically -->
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- Image Item Template (for JavaScript generation) -->
+<template id="image-template">
+    <div class="col-md-6 mb-3 image-item" data-image-index="">
+        <div class="d-flex align-items-center p-2 bg-dark bg-opacity-50 rounded">
+            <img class="image-preview-thumbnail" alt="Image preview">
+            <div class="ms-2 flex-grow-1">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="filename small text-truncate"></div>
+                    <span class="image-status"></span>
+                </div>
+                <div class="small text-muted mt-1 processing-time"></div>
+                <div class="mt-2 image-actions" style="display: none;">
+                    <a href="#" class="btn btn-sm btn-outline-primary view-image-btn">
+                        <i class="bi bi-eye-fill me-1"></i>View Components
+                    </a>
+                    <a href="#" class="btn btn-sm btn-outline-info ms-2 view-csv-btn">
+                        <i class="bi bi-table me-1"></i>View CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+{% endblock %}

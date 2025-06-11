@@ -1,0 +1,217 @@
+/* Feature Cards */
+.feature-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(224, 242, 254, 0.8));
+    border-radius: 0.75rem;
+    padding: 2rem 1.5rem;
+    height: 100%;
+    box-shadow: 0 4px 15px rgba(0, 82, 204, 0.15);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(0, 82, 204, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    color: #172b4d;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 25px rgba(0, 82, 204, 0.25);
+    border-color: rgba(0, 82, 204, 0.2);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(224, 242, 254, 0.9));
+}
+
+/* Light theme feature cards */
+[data-theme="light"] .feature-card {
+    background: linear-gradient(135deg, white, rgba(233, 213, 255, 0.8)); /* White to light purple gradient */
+    box-shadow: 0 4px 15px rgba(111, 44, 200, 0.2);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+[data-theme="light"] .feature-card h4 {
+    color: #7e22ce;
+}
+
+[data-theme="light"] .feature-card:hover {
+    box-shadow: 0 8px 30px rgba(111, 44, 200, 0.3);
+    border-color: rgba(168, 85, 247, 0.3);
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    color: #0052cc;
+    display: inline-block;
+    margin-bottom: 1rem;
+    background: rgba(0, 82, 204, 0.1);
+    width: 70px;
+    height: 70px;
+    line-height: 70px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 82, 204, 0.2);
+}
+
+[data-theme="light"] .feature-icon {
+    color: #9333ea;
+    background: rgba(168, 85, 247, 0.1);
+}
+
+.feature-card:hover .feature-icon {
+    transform: scale(1.1);
+    background: rgba(99, 102, 241, 0.2);
+}
+
+[data-theme="light"] .feature-card:hover .feature-icon {
+    background: rgba(168, 85, 247, 0.2);
+    filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.5));
+}
+
+/* About Section */
+.about-section {
+    padding: 5rem 0;
+    background: url("/static/background/wp4056279.jpg") no-repeat center center;
+    background-size: cover;
+    position: relative;
+}
+
+.about-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.85);
+}
+
+.about-content {
+    position: relative;
+    z-index: 1;
+}
+
+.about-image {
+    position: relative;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.about-image img {
+    width: 100%;
+    transition: transform 1s ease;
+}
+
+.about-image:hover img {
+    transform: scale(1.05);
+}
+
+.about-text {
+    padding: 2rem;
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.section-title {
+    position: relative;
+    margin-bottom: 2rem;
+    display: inline-block;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -10px;
+    width: 50px;
+    height: 3px;
+    background: #6366f1;
+}
+
+/* How It Works Section */
+.how-it-works-section {
+    padding: 5rem 0;
+    background: linear-gradient(rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.9)), 
+                url("/static/background/WFEFR.jpg") no-repeat center center;
+    background-size: cover;
+}
+
+.step-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 1rem;
+    padding: 2rem;
+    height: 100%;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.step-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5px;
+    height: 100%;
+    background: #6366f1;
+    transition: all 0.3s ease;
+}
+
+.step-card:hover {
+    transform: translateY(-10px);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.step-card:hover::before {
+    width: 100%;
+    opacity: 0.1;
+}
+
+.step-number {
+    font-size: 4rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.1);
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    line-height: 1;
+}
+
+.step-title {
+    position: relative;
+    z-index: 1;
+    color: #fff;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.step-description {
+    position: relative;
+    z-index: 1;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Timeline Connector */
+.timeline-connector {
+    position: relative;
+}
+
+.timeline-connector::after {
+    content: '';
+    position: absolute;
+    top: calc(50% - 1px);
+    left: -30px;
+    width: 30px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 767.98px) {
+    .timeline-connector::after {
+        display: none;
+    }
+
+    .feature-card, .step-card {
+        margin-bottom: 2rem;
+    }
+}

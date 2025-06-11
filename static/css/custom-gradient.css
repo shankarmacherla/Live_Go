@@ -1,0 +1,99 @@
+/* Background image for entire site */
+body {
+    background: url('https://wallpaperaccess.com/full/340554.png');
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
+}
+
+/* Header styling - slightly darker blue with transparency */
+.navbar, 
+header {
+    background: linear-gradient(to right, #0212f5cb, rgba(0, 60, 255, 0.3)) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(0, 82, 204, 0.2);
+    box-shadow: 0 2px 10px rgba(0, 82, 204, 0.15);
+}
+
+
+/* Tab styling - half transparent with blue and white gradient */
+.nav-tabs .nav-link, 
+.component-tabs .nav-link {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(186, 230, 253, 0.6)) !important;
+    border: 1px solid rgba(0, 82, 204, 0.3);
+    color: #003380 !important;
+    font-weight: 500;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link:hover, 
+.component-tabs .nav-link:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(186, 230, 253, 0.8)) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.nav-tabs .nav-link.active, 
+.component-tabs .nav-link.active {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(59, 130, 246, 0.4)) !important;
+    border-bottom-color: #0052cc;
+    font-weight: 700;
+    color: #0052cc !important;
+    box-shadow: 0 -2px 8px rgba(0, 82, 204, 0.15);
+}
+
+/* JSON Preview styling - blue and white instead of violet */
+#json-preview {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(224, 242, 254, 0.8)) !important;
+    border: 1px solid rgba(0, 82, 204, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 82, 204, 0.15);
+    color: #0c4a6e !important;
+}
+
+/* JSON Preview syntax coloring in blue tones */
+.json-key {
+    color: #0052cc !important; /* Dark blue */
+}
+
+.json-string {
+    color: #0369a1 !important; /* Medium blue */
+}
+
+.json-number {
+    color: #0284c7 !important; /* Light blue */
+}
+
+.json-boolean {
+    color: #0ea5e9 !important; /* Sky blue */
+}
+
+.json-toggle {
+    color: #0052cc !important;
+}
+
+.json-toggle:hover {
+    color: #38bdf8 !important;
+}
+
+/* Enhanced cards and containers */
+.card, .container .bg-white, .container .bg-light {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(224, 242, 254, 0.7)) !important;
+    border: 1px solid rgba(0, 82, 204, 0.2);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Enhance table appearance */
+.table {
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table thead {
+    background: linear-gradient(90deg, rgba(0, 82, 204, 0.1), rgba(59, 130, 246, 0.2));
+}

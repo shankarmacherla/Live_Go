@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}RackTrack{% endblock %}
+
+{% block extra_css %}
+<!-- Camera-specific styles -->
+<style>
+    #camera-view {
+        background: #333;
+        border-radius: 8px;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    #camera-output {
+        max-width: 100%;
+        max-height: 400px;
+        object-fit: contain;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    #camera-container {
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+        width: 100%;
+        max-width: 500px;
+        height: 500px;
+        margin: 0 auto;
+    }
+    
+    /* Fixed square size for mobile compatibility */
+    .camera-fixed-size {
+        width: 100%;
+        max-width: 500px;
+        height: 500px;
+        margin: 0 auto;
+        background: #222;
+        border-radius: 8px;
+    }
+    
+    .camera-guide {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 2px dashed rgba(255, 255, 255, 0.4);
+        border-radius: 8px;
+        pointer-events: none;
+        box-sizing: border-box;
+    }
+    
+    .capture-help-text {
+        color: #ccc;
+        font-size: 0.9rem;
+        margin-top: 8px;
+    }
+    
+    #upload-prompt {
+        background-color: rgba(40, 167, 69, 0.1);
+        border: 1px solid rgba(40, 167, 69, 0.3);
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+        display: none;
+    }
+    
+    /* Pulse animation for capture button */
+    .pulse-animation {
+        animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(13, 110, 253, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(13, 110, 253, 0);
+        }
+    }
+    
+    /* Style improvements for camera UI */
+    .modal-content.bg-dark {
+        border: none;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+    
+    #cameraModal .modal-header {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    #cameraModal .modal-footer {
+        background-color: rgba(255, 255, 255, 0.03);
+    }
+    
+    /* Fade transition for camera output */
+    #camera-output {
+        transition: all 0.3s ease-in-out;
+    }
+    
+    /* Highlight effects for upload area after capture */
+    .highlight-transition {
+        transition: all 0.4s ease-in-out;
+    }
+    
+    .highlight-effect {
+        box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.5);
+        transform: scale(1.02);
+    }
+    
+    /* Improved upload preview */
+    .upload-preview {
+        max-height: 200px;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Success message improvements */
+    #success-message {
+        animation: fadeInOut 3s ease-in-out;
+    }
+    
+    @keyframes fadeInOut {
+        0% { opacity: 0; }
+        15% { opacity: 1; }
+        85% { opacity: 1; }
+        100% { opacity: 0; }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Camera API polyfill for better browser compatibility -->
+<script src="https://unpkg.com/webcam-easy/dist/webcam-easy.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-md-11">
+            <div class="elegant-card text-center">
+                <h1 class="mb-4">RackTrack</h1>
+                <p class="text-muted mb-4">Upload network equipment images for component analysis and visualization</p>
+                
+                <form id="upload-form" method="post" action="/detect" enctype="multipart/form-data">
+                    <div id="upload-area" class="upload-area mb-4">
+                        <i class="bi bi-cloud-arrow-up-fill upload-icon"></i>
+                        <div>
+                            <div class="mb-2">Drag & Drop image here or click to browse</div>
+                            <div class="small text-muted">Supported formats: JPEG, PNG, WebP</div>
+                            <div id="file-name-display" class="mt-2 text-primary"></div>
+                        </div>
+                        <input type="file" name="image" class="form-control d-none" id="file-input" accept="image/*" required>
+                        <img id="upload-preview" class="upload-preview" alt="Upload preview">
+                    </div>
+                    
+                    <div id="success-message" class="alert alert-success mt-3 fw-bold" style="display: none; font-size: 1.1rem; background: rgba(16, 185, 129, 0.2); border: 2px solid #10b981; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+                        <i class="bi bi-check-circle-fill me-2"></i>Your image has been uploaded! Go to the detection phase.
+                    </div>
+                    
+                    <div id="error-message" class="error-message"></div>
+                    
+                    <div class="d-flex justify-content-center gap-3 mt-3">
+                        <button class="btn btn-primary btn-lg" type="submit">
+                            <i class="bi bi-cloud-arrow-up me-2"></i>Upload Image
+                        </button>
+                        
+                        <button id="camera-button" class="btn btn-outline-primary btn-lg" type="button">
+                            <i class="bi bi-camera me-2"></i>Use Camera
+                        </button>
+                    </div>
+                    
+                    <!-- Camera Capture Container (inline, not modal) -->
+                    <div id="camera-section" class="mt-4" style="display: none;">
+                        <div class="card theme-card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Camera Capture</h5>
+                                <button type="button" id="close-camera" class="btn-close"></button>
+                            </div>
+                            <div class="card-body text-center">
+                                <div id="camera-container" class="camera-fixed-size">
+                                    <video id="camera-view" autoplay playsinline muted></video>
+                                    <div class="camera-guide"></div>
+                                </div>
+                                <p class="capture-help-text mt-2">
+                                    <i class="bi bi-info-circle me-1"></i>Position your component in the frame
+                                </p>
+                                <canvas id="camera-canvas" style="display: none;"></canvas>
+                                <img id="camera-output" class="img-fluid mt-3" style="display: none;">
+                                
+                                <!-- Upload prompt that appears after capture -->
+                                <div id="upload-prompt" class="text-center mt-3">
+                                    <i class="bi bi-check-circle-fill text-success fs-4 mb-2"></i>
+                                    <h5>Image Captured Successfully!</h5>
+                                    <p>Click "Use This Image" to continue with component matching</p>
+                                </div>
+                                
+                                <div id="camera-error" class="alert alert-warning mt-3" style="display: none;">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    <span id="camera-error-message">Unable to access camera. Please check your camera permissions.</span>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between mt-3">
+                                    <button id="flip-camera" class="btn btn-outline-light" type="button">
+                                        <i class="bi bi-arrow-repeat me-2"></i>Flip Camera
+                                    </button>
+                                    <div>
+                                        <button id="capture-button" class="btn btn-primary btn-lg pulse-animation" type="button">
+                                            <i class="bi bi-camera-fill me-2"></i>Capture Photo
+                                        </button>
+                                        <button id="use-capture-button" class="btn btn-success btn-lg" type="button" style="display: none;">
+                                            <i class="bi bi-check-circle-fill me-2"></i>Use This Image
+                                        </button>
+                                        <button id="retake-button" class="btn btn-outline-light" type="button" style="display: none;">
+                                            <i class="bi bi-arrow-counterclockwise me-2"></i>Retake
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Feature highlights -->
+            <div class="row mt-5">
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <i class="bi bi-image feature-icon"></i>
+                        <h4 class="mt-3">Image Segmentation</h4>
+                        <p class="text-muted">Our AI detects and separates objects in your images automatically</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <i class="bi bi-search feature-icon"></i>
+                        <h4 class="mt-3">Smart Matching</h4>
+                        <p class="text-muted">Advanced algorithms find the most similar products in our catalog</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <i class="bi bi-file-earmark-arrow-down feature-icon"></i>
+                        <h4 class="mt-3">Export Results</h4>
+                        <p class="text-muted">Download matching results in CSV format for easy integration</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

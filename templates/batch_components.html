@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Batch Components{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Additional page-specific styles */
+    .component-item.selected .cropped-img-container {
+        border: 2px solid #6366f1;
+    }
+
+    .batch-navigation {
+        margin-bottom: 20px;
+    }
+
+    .component-counter {
+        background-color: rgba(0, 0, 0, 0.2);
+        padding: 8px 15px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+    }
+
+    .component-meta {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/components.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-11">
+            <div class="elegant-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="mb-1">Image Components</h1>
+                        <p class="text-muted mb-0">
+                            From Batch: <strong>{{ batch_id }}</strong> • 
+                            Image: <strong>{{ image_info.filename }}</strong>
+                        </p>
+                    </div>
+                    <div class="batch-navigation">
+                        <a href="/batch_results/{{ batch_id }}" class="btn btn-outline-primary">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Batch
+                        </a>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="component-filters">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary active" data-filter="all">All</button>
+                            <button type="button" class="btn btn-outline-primary" data-filter="Switch">Switches</button>
+                            <button type="button" class="btn btn-outline-primary" data-filter="Port">Ports</button>
+                            <button type="button" class="btn btn-outline-primary" data-filter="Cable">Cables</button>
+                            <button type="button" class="btn btn-outline-primary" data-filter="Rack">Racks</button>
+                        </div>
+                    </div>
+
+                    <div class="component-counter">
+                        <i class="bi bi-grid-3x3 me-1"></i>
+                        <span id="component-count">{{ components|length }}</span> Components
+                    </div>
+                </div>
+
+                {% if original_image %}
+                <div class="mb-4">
+                    <h4>Original Image</h4>
+                    <img src="/static/batch_results/{{ batch_id }}/{{ image_info.filename }}" 
+                         alt="{{ image_info.filename }}" class="img-fluid rounded mb-3">
+                </div>
+                {% endif %}
+
+                {% if not components %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>No components were detected in this image.
+                </div>
+                {% else %}
+                <div class="row" id="components-gallery">
+                    {% for component in components %}
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4 component-item" data-type="{{ component.type }}">
+                        <div class="p-3 bg-dark bg-opacity-50 rounded h-100 d-flex flex-column">
+                            <div class="cropped-img-container mb-2">
+                                <img src="{{ component.image_path|fix_path }}" class="img-fluid rounded cropped-img" alt="{{ component.type }}">
+                            </div>
+                            <div class="component-info mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="badge 
+                                        {% if component.type == 'Cable' %}bg-primary
+                                        {% elif component.type == 'Port' %}bg-success
+                                        {% elif component.type == 'Switch' %}bg-warning text-dark
+                                        {% elif component.type == 'Rack' %}bg-danger
+                                        {% else %}bg-secondary
+                                        {% endif %}">
+                                        {{ component.type }}
+                                    </span>
+                                    <small class="text-muted">
+                                        ID: {{ component.id|truncate(8, true, '') }}
+                                    </small>
+                                </div>
+
+                                {% if component.match %}
+                                <div class="match-info small">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Matched:</span>
+                                        <span class="text-info">{{ component.match.name }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Score:</span>
+                                        <span class="text-warning">{{ "%.2f"|format(component.match.score) }}</span>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="match-info small text-muted">
+                                    No catalog match found
+                                </div>
+                                {% endif %}
+
+                                <div class="component-meta mt-2">
+                                    <div>Size: {{ component.width }}×{{ component.height }}px</div>
+                                    {% if component.confidence %}
+                                    <div>Confidence: {{ "%.0f"|format(component.confidence * 100) }}%</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fullscreen Component Modal -->
+<div class="modal fade" id="componentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark">
+            <div class="modal-header">
+                <h5 class="modal-title">Component Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modal-img" class="img-fluid rounded" src="" alt="Component">
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="card bg-dark bg-opacity-50">
+                            <div class="card-header">Component Info</div>
+                            <div class="card-body" id="modal-component-info">
+                                <!-- Component info will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-dark bg-opacity-50">
+                            <div class="card-header">Match Info</div>
+                            <div class="card-body" id="modal-match-info">
+                                <!-- Match info will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

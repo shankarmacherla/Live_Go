@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100" height="100" fill="#f0f0f0"/>
+  <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" dominant-baseline="middle" fill="#999">
+    Image Not Found
+  </text>
+  <line x1="20" y1="20" x2="80" y2="80" stroke="#999" stroke-width="2"/>
+  <line x1="80" y1="20" x2="20" y2="80" stroke="#999" stroke-width="2"/>
+</svg>

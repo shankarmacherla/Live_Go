@@ -1,0 +1,431 @@
+{% extends "base.html" %}
+
+{% block title %}Auto Detection{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="elegant-card">
+        <h1 class="text-center mb-4">Automated Component Detection</h1>
+        <p class="text-muted text-center mb-4">Process your uploaded image to automatically detect and categorize components</p>
+        
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div id="image-preview-container" class="mb-4">
+                    <div class="preview-area fixed-image-container">
+                        <img id="uploaded-image-preview" class="fixed-image" alt="Your uploaded image">
+                        <div id="no-image-message" class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>No image uploaded yet. Please upload an image from the home page first.
+                        </div>
+                    </div>
+                    <div id="image-name" class="text-muted mt-2"></div>
+                </div>
+                
+                <div id="error-message" class="error-message"></div>
+                
+                <!-- Enhanced Blue & White Progress Bar -->
+                <div id="progress-container" class="mb-4" style="display: none;">
+                    <div class="progress-wrapper" style="position: relative;">
+                        <div class="progress enhanced-progress" style="height: 35px; border-radius: 20px; background: linear-gradient(135deg, #f8faff, #e8f2ff); box-shadow: 0 4px 15px rgba(0, 82, 204, 0.15), inset 0 2px 4px rgba(0,0,0,0.05); border: 2px solid rgba(0, 82, 204, 0.1);">
+                            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" style="width: 0%; border-radius: 18px; background: linear-gradient(45deg, #0052cc, #4195ff, #66b3ff); box-shadow: 0 2px 12px rgba(0, 82, 204, 0.4), inset 0 1px 2px rgba(255,255,255,0.3);" 
+                                 aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                <span id="progress-text" class="fw-bold text-white" style="text-shadow: 0 1px 3px rgba(0,82,204,0.5); font-size: 14px; position: relative; z-index: 2;">0%</span>
+                            </div>
+                        </div>
+                        <div class="progress-glow" style="position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px; background: linear-gradient(45deg, transparent, rgba(0, 82, 204, 0.2), transparent); border-radius: 22px; opacity: 0; transition: opacity 0.3s ease;"></div>
+                    </div>
+                    <div id="progress-message" class="text-center mt-3" style="color: #0052cc; font-weight: 600; font-size: 16px;">
+                        <i class="bi bi-gear-fill me-2" style="animation: spin 2s linear infinite; color: #4195ff;"></i>
+                        <strong>Ready to start processing...</strong>
+                    </div>
+                </div>
+                
+                <form id="process-form" method="post" enctype="multipart/form-data" class="text-center">
+                    <input type="hidden" name="use_uploaded" value="true">
+                    <button id="process-btn" class="btn btn-primary btn-lg" type="submit" disabled>
+                        <i class="bi bi-lightning me-2"></i>Process Image
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="row mt-5">
+            <div class="col-md-4">
+                <div class="process-step text-center">
+                    <div class="process-icon">
+                        <i class="bi bi-upload"></i>
+                    </div>
+                    <h4 class="mt-3">1. Upload Image</h4>
+                    <p class="text-muted">Select or drag an image of your network equipment</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="process-step text-center">
+                    <div class="process-icon">
+                        <i class="bi bi-magic"></i>
+                    </div>
+                    <h4 class="mt-3">2. Auto Processing</h4>
+                    <p class="text-muted">Our AI detects and segments components automatically</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="process-step text-center">
+                    <div class="process-icon">
+                        <i class="bi bi-clipboard-check"></i>
+                    </div>
+                    <h4 class="mt-3">3. View Results</h4>
+                    <p class="text-muted">See detected components and matching products</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .process-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto;
+        transition: all 0.3s ease;
+    }
+    
+    .process-step:hover .process-icon {
+        transform: scale(1.1);
+        background: rgba(99, 102, 241, 0.2);
+    }
+    
+    .process-step {
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .process-step:hover {
+        transform: translateY(-5px);
+    }
+    
+    /* Enhanced Progress Bar Styles */
+    .progress-wrapper {
+        position: relative;
+        margin: 20px 0;
+    }
+    
+    .enhanced-progress {
+        position: relative;
+        overflow: visible;
+        transition: all 0.3s ease;
+    }
+    
+    .enhanced-progress:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 82, 204, 0.25), inset 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .progress-bar {
+        transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .progress-bar::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        animation: shimmer 2s infinite;
+    }
+    
+    @keyframes shimmer {
+        0% { left: -100%; }
+        100% { left: 100%; }
+    }
+    
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+    
+    .progress-glow {
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    #progress-message {
+        animation: fadeInUp 0.5s ease;
+        text-shadow: 0 1px 3px rgba(0, 82, 204, 0.2);
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Blue Success state styling */
+    .progress-success {
+        background: linear-gradient(45deg, #0052cc, #4195ff, #66b3ff) !important;
+        box-shadow: 0 4px 20px rgba(0, 82, 204, 0.5), inset 0 1px 2px rgba(255,255,255,0.4) !important;
+    }
+    
+    .progress-success::after {
+        content: '✓';
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: white;
+        font-weight: bold;
+        font-size: 18px;
+        text-shadow: 0 1px 3px rgba(0,82,204,0.7);
+        animation: checkmarkBounce 0.6s ease-out;
+    }
+    
+    @keyframes checkmarkBounce {
+        0% { transform: translateY(-50%) scale(0); }
+        50% { transform: translateY(-50%) scale(1.2); }
+        100% { transform: translateY(-50%) scale(1); }
+    }
+    
+    /* Enhanced progress glow effect */
+    .progress-wrapper:hover .progress-glow {
+        opacity: 1;
+        animation: pulseGlow 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes pulseGlow {
+        0%, 100% { 
+            opacity: 0.3; 
+            transform: scale(1);
+        }
+        50% { 
+            opacity: 0.6; 
+            transform: scale(1.02);
+        }
+    }
+    
+    /* Fixed Image Container Styles */
+    .fixed-image-container {
+        max-width: 1080px;
+        width: 100%;
+        margin: 0;
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        position: relative;
+        min-height: 400px;
+    }
+    
+    .fixed-image {
+        width: 100%;
+        height: auto;
+        max-height: 1080px;
+        object-fit: contain;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        display: block;
+    }
+    
+    .fixed-image-container .alert {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        margin: 0;
+        width: 80%;
+        text-align: center;
+    }
+    
+    /* Responsive adjustments for smaller screens */
+    @media (max-width: 1200px) {
+        .fixed-image-container {
+            max-width: 800px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .fixed-image-container {
+            max-width: 500px;
+            min-height: 300px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const uploadedImagePreview = document.getElementById('uploaded-image-preview');
+        const noImageMessage = document.getElementById('no-image-message');
+        const imageName = document.getElementById('image-name');
+        const processBtn = document.getElementById('process-btn');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const progressMessage = document.getElementById('progress-message');
+        const processForm = document.getElementById('process-form');
+        
+        let progressInterval;
+        
+        // Check for previously uploaded image
+        const uploadedImage = getLastUploadedImage();
+        
+        if (uploadedImage && uploadedImage.dataUrl) {
+            // Display the uploaded image
+            uploadedImagePreview.src = uploadedImage.dataUrl;
+            uploadedImagePreview.style.display = 'block';
+            noImageMessage.style.display = 'none';
+            
+            // Enable the process button
+            processBtn.disabled = false;
+            
+            if (uploadedImage.fileName) {
+                imageName.textContent = 'Using: ' + uploadedImage.fileName;
+            }
+        } else {
+            // No image uploaded yet
+            uploadedImagePreview.style.display = 'none';
+            noImageMessage.style.display = 'block';
+            
+            // Keep process button disabled
+            processBtn.disabled = true;
+        }
+        
+        // Handle form submission with progress tracking
+        processForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!uploadedImage.dataUrl) {
+                alert('Please upload an image first from the home page.');
+                return;
+            }
+            
+            startProgressTracking();
+            
+            // Submit form via fetch to track progress
+            const formData = new FormData(this);
+            
+            fetch('/detect', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.redirected) {
+                    // Processing completed successfully, redirect to results
+                    window.location.href = response.url;
+                } else {
+                    return response.text();
+                }
+            })
+            .then(html => {
+                if (html) {
+                    // Handle error case
+                    document.body.innerHTML = html;
+                }
+            })
+            .catch(error => {
+                console.error('Processing error:', error);
+                // Show error in progress message instead of alert
+                progressMessage.innerHTML = '<i class="bi bi-exclamation-triangle me-2" style="color: #dc3545;"></i><strong style="color: #dc3545;">Processing failed. Please try again.</strong>';
+                
+                // Show the process button again after error
+                setTimeout(() => {
+                    processBtn.style.display = 'block';
+                    progressContainer.style.display = 'none';
+                }, 3000);
+                
+                stopProgressTracking();
+            });
+        });
+        
+        // Start progress tracking
+        function startProgressTracking() {
+            progressContainer.style.display = 'block';
+            processBtn.style.display = 'none'; // Hide the button completely
+            
+            // Start polling for progress updates
+            progressInterval = setInterval(updateProgress, 1000);
+        }
+        
+        // Update progress from server
+        function updateProgress() {
+            fetch('/api/progress')
+                .then(response => response.json())
+                .then(data => {
+                    const percentage = data.percentage || 0;
+                    const message = data.message || 'Processing...';
+                    
+                    // Update progress bar with smooth animations
+                    progressBar.style.width = percentage + '%';
+                    progressBar.setAttribute('aria-valuenow', percentage);
+                    progressText.textContent = Math.round(percentage) + '%';
+                    
+                    // Update message with green styling and appropriate icon
+                    let icon = '';
+                    if (percentage < 25) {
+                        icon = '<i class="bi bi-gear-fill me-2" style="animation: spin 2s linear infinite;"></i>';
+                    } else if (percentage < 75) {
+                        icon = '<i class="bi bi-cpu-fill me-2" style="color: #10b981;"></i>';
+                    } else {
+                        icon = '<i class="bi bi-check-circle-fill me-2" style="color: #10b981;"></i>';
+                    }
+                    
+                    progressMessage.innerHTML = `${icon}<strong style="color: #059669;">${message}</strong>`;
+                    
+                    // Add glow effect as progress increases
+                    const glowElement = document.querySelector('.progress-glow');
+                    if (glowElement) {
+                        glowElement.style.opacity = Math.min(percentage / 100, 0.6);
+                    }
+                    
+                    // Check if completed
+                    if (data.completed || percentage >= 100) {
+                        stopProgressTracking();
+                        progressMessage.innerHTML = '<i class="bi bi-check-circle-fill me-2" style="color: #10b981;"></i><strong style="color: #059669;">Processing completed! Redirecting to results...</strong>';
+                        
+                        // Add success styling to progress bar
+                        progressBar.classList.add('progress-success');
+                        
+                        // Redirect immediately without delay
+                        setTimeout(() => {
+                            window.location.href = '/results';
+                        }, 1000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching progress:', error);
+                });
+        }
+        
+        // Stop progress tracking
+        function stopProgressTracking() {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+            // Keep the button hidden - don't show it again after completion
+        }
+    });
+</script>
+{% endblock %}

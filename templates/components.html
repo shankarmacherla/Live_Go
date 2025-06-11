@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Components Gallery{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Additional page-specific styles */
+    .component-item.selected .cropped-img-container {
+        border: 2px solid #6366f1;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/component-management.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-11">
+            <div class="elegant-card">
+                <h1 class="text-center result-heading">Component Images</h1>
+                <p class="text-center text-muted mb-4">Detected and cropped components from your images</p>
+                
+                <!-- Component type tabs -->
+                <ul class="nav nav-tabs component-tabs mb-4" id="componentTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">
+                            <i class="bi bi-grid-3x3 me-2"></i>All <span class="badge bg-primary ms-1">{{ cropped_images|length }}</span>
+                        </button>
+                    </li>
+                    {% for type, images in grouped_images.items() %}
+                        {% if images|length > 0 %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="{{ type }}-tab" data-bs-toggle="tab" data-bs-target="#{{ type }}" type="button" role="tab">
+                                {% if type == 'switch' %}
+                                    <i class="bi bi-toggle-on me-2"></i>
+                                {% elif type == 'port' %}
+                                    <i class="bi bi-ethernet me-2"></i>
+                                {% elif type == 'cable' %}
+                                    <i class="bi bi-lightning me-2"></i>
+                                {% elif type == 'rack' %}
+                                    <i class="bi bi-hdd-rack me-2"></i>
+                                {% else %}
+                                    <i class="bi bi-question-circle me-2"></i>
+                                {% endif %}
+                                {{ type|capitalize }} <span class="badge bg-primary ms-1">{{ images|length }}</span>
+                            </button>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+                
+                <!-- Tab content -->
+                <div class="tab-content" id="componentTabsContent">
+                    <!-- All components tab -->
+                    <div class="tab-pane fade show active" id="all" role="tabpanel">
+                        <div class="row result-gallery">
+                            {% for img in cropped_images %}
+                            <div class="col-md-3 col-sm-6 mb-4 component-item">
+                                <div class="cropped-img-container">
+                                    <div class="component-select">
+                                        <input type="checkbox" class="component-checkbox" data-path="{{ img.path }}">
+                                    </div>
+                                    <img src="/{{ img.path }}" class="cropped-img" alt="Identified component">
+                                    <div class="img-overlay">
+                                        <span class="img-number">{{ loop.index }}</span>
+                                    </div>
+                                    <div class="component-type-badge">
+                                        <span class="badge bg-info">{{ img.type }}</span>
+                                    </div>
+                                    <div class="component-actions">
+                                        <button class="btn btn-sm btn-danger delete-component" data-path="{{ img.path }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Type-specific tabs -->
+                    {% for type, images in grouped_images.items() %}
+                        {% if images|length > 0 %}
+                        <div class="tab-pane fade" id="{{ type }}" role="tabpanel">
+                            <div class="row result-gallery">
+                                {% for img in images %}
+                                <div class="col-md-3 col-sm-6 mb-4 component-item">
+                                    <div class="cropped-img-container">
+                                        <div class="component-select">
+                                            <input type="checkbox" class="component-checkbox" data-path="{{ img.path }}">
+                                        </div>
+                                        <img src="/{{ img.path }}" class="cropped-img" alt="Identified component">
+                                        <div class="img-overlay">
+                                            <span class="img-number">{{ loop.index }}</span>
+                                        </div>
+                                        <div class="component-actions">
+                                            <button class="btn btn-sm btn-danger delete-component" data-path="{{ img.path }}">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                
+                {% if cropped_images|length == 0 %}
+                <div class="col-12 text-center">
+                    <div class="alert alert-secondary bg-opacity-25">
+                        <i class="bi bi-exclamation-circle me-2"></i>
+                        No components have been detected yet
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Management controls -->
+                <div class="management-controls mb-4 {% if cropped_images|length == 0 %}d-none{% endif %}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="selectAllComponents">
+                            <label class="form-check-label" for="selectAllComponents">
+                                Select all components
+                            </label>
+                        </div>
+                        <div class="bulk-actions d-none">
+                            <button id="deleteSelectedBtn" class="btn btn-sm btn-danger">
+                                <i class="bi bi-trash me-1"></i>Delete Selected
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-btn-container">
+                    <a href="/detect" class="btn btn-primary">
+                        <i class="bi bi-lightning me-2"></i>Auto Detect
+                    </a>
+                    <a href="/manual-detect" class="btn btn-info">
+                        <i class="bi bi-pencil-square me-2"></i>Manual Detect
+                    </a>
+                    <a href="/network" class="btn btn-purple" style="background-color: #9c69e2; border-color: #9c69e2; color: white;">
+                        <i class="bi bi-diagram-3 me-2"></i>Network Visualization
+                    </a>
+                    <a href="/results" class="btn btn-success">
+                        <i class="bi bi-table me-2"></i>View Results
+                    </a>
+                    <a href="/" class="btn btn-secondary">
+                        <i class="bi bi-house me-2"></i>Home
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Component Details Modal -->
+            <div id="component-details-modal" class="component-details-modal">
+                <div class="component-details-content">
+                    <div class="component-details-header">
+                        <h3 id="component-details-title">Component Details</h3>
+                        <button class="component-details-close" id="close-component-details">&times;</button>
+                    </div>
+                    <div class="component-preview">
+                        <img id="component-details-image" src="" alt="Component preview">
+                        <span class="badge bg-info" id="component-details-type"></span>
+                    </div>
+                    <div class="component-details-info">
+                        <table class="component-info-table">
+                            <tr>
+                                <th>File Path</th>
+                                <td id="component-details-path"></td>
+                            </tr>
+                            <tr>
+                                <th>Type</th>
+                                <td id="component-details-type-value"></td>
+                            </tr>
+                            <tr>
+                                <th>Size</th>
+                                <td id="component-details-size"></td>
+                            </tr>
+                            <tr>
+                                <th>Dimensions</th>
+                                <td id="component-details-dimensions"></td>
+                            </tr>
+                            <tr>
+                                <th>Created</th>
+                                <td id="component-details-created"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="component-actions-footer">
+                        <button id="component-details-delete" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i>Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Components stats -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="stats-card">
+                        <div class="stats-icon">
+                            <i class="bi bi-card-image"></i>
+                        </div>
+                        <div class="stats-info">
+                            <h4>{{ cropped_images|length }}</h4>
+                            <p>Components Detected</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="stats-card">
+                        <div class="stats-icon">
+                            <i class="bi bi-clock"></i>
+                        </div>
+                        <div class="stats-info">
+                            <h4>Just Now</h4>
+                            <p>Processing Time</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

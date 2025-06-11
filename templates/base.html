@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{% block title %}RackTrack{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/feature-cards.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme-toggle.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhanced-ui.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom-gradient.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Animated background -->
+    <div class="animated-bg">
+        <div class="animated-blob blob-1"></div>
+        <div class="animated-blob blob-2"></div>
+        <div class="animated-blob blob-3"></div>
+    </div>
+    
+    <!-- Header -->
+    <header class="main-header">
+        <nav class="navbar navbar-expand-lg navbar-dark">
+            <div class="container">
+                <a class="navbar-brand" href="/">
+                    <i class="bi bi-hdd-rack-fill me-2"></i><span class="brand-text">Rack<span class="brand-highlight">Track</span></span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">
+                                <i class="bi bi-house-door me-1"></i>Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#about">
+                                <i class="bi bi-info-circle me-1"></i>About
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help">
+                                <i class="bi bi-question-circle me-1"></i>Help
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <div class="theme-switch-wrapper">
+                                <label class="theme-switch" for="checkbox">
+                                    <input type="checkbox" id="checkbox" />
+                                    <div class="slider round">
+                                        <div class="slider-icons">
+                                            <span>🌙</span>
+                                            <span>☀️</span>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Sidebar toggle button -->
+    <button id="sidebar-toggle" class="sidebar-toggle">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Sidebar and Main Content -->
+    <div class="container-fluid">
+        <div class="row">
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-content">
+                    <h5><i class="bi bi-upload me-2"></i>Upload</h5>
+                    <ul class="nav flex-column sidebar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">
+                                <i class="bi bi-cloud-arrow-up me-2"></i>Upload Image
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <div class="sidebar-divider my-4"></div>
+                    
+                    <h5><i class="bi bi-image me-2"></i>Detection</h5>
+                    <ul class="nav flex-column sidebar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/detect' %}active{% endif %}" href="/detect">
+                                <i class="bi bi-lightning me-2"></i>Auto Detect
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/manual-detect' %}active{% endif %}" href="/manual-detect">
+                                <i class="bi bi-pencil-square me-2"></i>Manual Detect
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/batch_process' %}active{% endif %}" href="/batch_process">
+                                <i class="bi bi-collection me-2"></i>Batch Processing
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <div class="sidebar-divider my-4"></div>
+
+                    <h5><i class="bi bi-crop me-2"></i>Components</h5>
+                    <p class="small text-light-emphasis mb-2">View cropped images</p>
+                    <ul class="nav flex-column sidebar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/components">
+                                <i class="bi bi-grid-3x3 me-2"></i>View Components
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <div class="sidebar-divider my-4"></div>
+                    
+                    <h5><i class="bi bi-file-earmark-bar-graph me-2"></i>Results</h5>
+                    <p class="small text-light-emphasis mb-2">View and download data</p>
+                    <ul class="nav flex-column sidebar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/results">
+                                <i class="bi bi-table me-2"></i>View CSV Results
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/download_csv">
+                                <i class="bi bi-download me-2"></i>Download CSV
+                            </a>
+                        </li>
+                    </ul>
+                    
+
+                </div>
+            </div>
+            
+            <main class="main-content">
+                <div class="content-container">
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Loading indicator -->
+    <div id="loading-container" class="loading-container">
+        <div class="spinner"></div>
+        <div id="loading-text" class="loading-text">Processing...</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/shared-upload.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/theme-toggle.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

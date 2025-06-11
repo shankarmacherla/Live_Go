@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+
+{% block title %}Manual Detection{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cropper-container {
+        max-width: 100%;
+        height: 500px;
+        position: relative;
+        overflow: hidden;
+        background-color: #222;
+        border-radius: 0.75rem;
+    }
+    
+    .cropped-preview {
+        width: 150px;
+        height: 150px;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        background-color: #333;
+    }
+    
+    .crop-controls {
+        margin-top: 1.5rem;
+    }
+    
+    .component-type-select {
+        width: 100%;
+        padding: 0.5rem;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 0.5rem;
+    }
+    
+    .component-type-select option {
+        background-color: #333;
+    }
+    
+    .cropped-items {
+        max-height: 500px;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+    }
+    
+    .cropped-item {
+        background: rgba(15, 23, 42, 0.6);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="elegant-card">
+        <h1 class="text-center mb-4">Manual Component Detection</h1>
+        <p class="text-muted text-center mb-4">Upload, crop, and categorize image components manually</p>
+        
+        <div class="row">
+            <!-- Image Preview Section -->
+            <div class="col-lg-6 mb-4">
+                <div id="image-preview-section">
+                    <h4><i class="bi bi-image me-2"></i>Uploaded Image</h4>
+                    <div id="image-preview-container" class="text-center mb-4 p-3 bg-dark bg-opacity-50 rounded">
+                        <div class="preview-area">
+                            <img id="uploaded-image-preview" class="img-fluid rounded" alt="Your uploaded image" style="max-height: 300px;">
+                            <div id="no-image-message" class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle me-2"></i>No image uploaded yet. Please upload an image from the home page first.
+                            </div>
+                        </div>
+                        <div id="image-name" class="text-muted mt-2 small"></div>
+                    </div>
+                </div>
+                
+                <!-- Cropper Section (initially hidden) -->
+                <div id="cropper-section" style="display: none;">
+                    <h4><i class="bi bi-crop me-2"></i>Crop Components</h4>
+                    <div class="cropper-container">
+                        <img id="cropper-image" src="" alt="Image for cropping">
+                    </div>
+                    
+                    <div class="crop-controls d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <div class="flex-grow-1">
+                            <select id="component-type" class="component-type-select">
+                                <option value="">Select component type</option>
+                                <option value="switch">Switch</option>
+                                <option value="port">Port</option>
+                                <option value="cable">Cable</option>
+                                <option value="rack">Rack</option>
+                            </select>
+                        </div>
+                        <div>
+                            <button id="crop-btn" class="btn btn-primary">
+                                <i class="bi bi-scissors me-2"></i>Crop Component
+                            </button>
+                            <button id="reset-crop-btn" class="btn btn-outline-secondary ms-2">
+                                <i class="bi bi-arrow-counterclockwise me-2"></i>Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cropped Items Preview -->
+            <div class="col-lg-6">
+                <h4><i class="bi bi-collection me-2"></i>Cropped Components</h4>
+                <div id="no-components-message" class="alert alert-secondary bg-opacity-25 text-center">
+                    <i class="bi bi-info-circle me-2"></i>No components have been cropped yet
+                </div>
+                
+                <div id="cropped-items" class="cropped-items">
+                    <!-- Cropped items will be added here dynamically -->
+                </div>
+                
+                <div class="mt-4 d-flex justify-content-between">
+                    <button id="clear-all-btn" class="btn btn-outline-danger" disabled>
+                        <i class="bi bi-trash me-2"></i>Clear All
+                    </button>
+                    <button id="save-components-btn" class="btn btn-success" disabled>
+                        <i class="bi bi-save me-2"></i>Save Components
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+<script>
+    let cropper;
+    let croppedComponents = [];
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const uploadedImagePreview = document.getElementById('uploaded-image-preview');
+        const noImageMessage = document.getElementById('no-image-message');
+        const imageName = document.getElementById('image-name');
+        const imagePreviewSection = document.getElementById('image-preview-section');
+        const cropperSection = document.getElementById('cropper-section');
+        const cropperImage = document.getElementById('cropper-image');
+        const componentType = document.getElementById('component-type');
+        const cropBtn = document.getElementById('crop-btn');
+        const resetCropBtn = document.getElementById('reset-crop-btn');
+        const croppedItems = document.getElementById('cropped-items');
+        const noComponentsMessage = document.getElementById('no-components-message');
+        const clearAllBtn = document.getElementById('clear-all-btn');
+        const saveComponentsBtn = document.getElementById('save-components-btn');
+        
+        // Check for previously uploaded image
+        const uploadedImage = getLastUploadedImage();
+        
+        if (uploadedImage && uploadedImage.dataUrl) {
+            // Display the uploaded image
+            uploadedImagePreview.src = uploadedImage.dataUrl;
+            uploadedImagePreview.style.display = 'block';
+            noImageMessage.style.display = 'none';
+            
+            if (uploadedImage.fileName) {
+                imageName.textContent = uploadedImage.fileName;
+            }
+            
+            // Add start cropping button
+            const startCroppingBtn = document.createElement('button');
+            startCroppingBtn.className = 'btn btn-primary mt-3';
+            startCroppingBtn.innerHTML = '<i class="bi bi-crop me-2"></i>Start Cropping';
+            imagePreviewSection.appendChild(startCroppingBtn);
+            
+            startCroppingBtn.addEventListener('click', function() {
+                // Show cropper section, hide image preview
+                imagePreviewSection.style.display = 'none';
+                cropperSection.style.display = 'block';
+                
+                // Initialize cropper
+                cropperImage.src = uploadedImage.dataUrl;
+                if (cropper) {
+                    cropper.destroy();
+                }
+                
+                cropper = new Cropper(cropperImage, {
+                    aspectRatio: NaN,
+                    viewMode: 1,
+                    autoCropArea: 0.8,
+                    background: false,
+                    zoomable: true,
+                    scalable: true
+                });
+            });
+        } else {
+            // No image uploaded yet
+            uploadedImagePreview.style.display = 'none';
+            noImageMessage.style.display = 'block';
+        }
+        
+        // Initialize crop button
+        cropBtn.addEventListener('click', cropComponent);
+        resetCropBtn.addEventListener('click', resetCropper);
+        clearAllBtn.addEventListener('click', clearAllComponents);
+        saveComponentsBtn.addEventListener('click', saveAllComponents);
+        
+        function cropComponent() {
+            if (!cropper || !componentType.value) {
+                alert('Please select a component type');
+                return;
+            }
+            
+            const croppedCanvas = cropper.getCroppedCanvas({
+                minWidth: 100,
+                minHeight: 100,
+                maxWidth: 1000,
+                maxHeight: 1000
+            });
+            
+            if (!croppedCanvas) {
+                alert('Error cropping image');
+                return;
+            }
+            
+            // Create a unique ID for this component
+            const componentId = 'component_' + Date.now();
+            
+            // Add to cropped components array
+            croppedComponents.push({
+                id: componentId,
+                type: componentType.value,
+                dataUrl: croppedCanvas.toDataURL(),
+                // In a real app, we would convert to a file here
+                file: dataURLtoFile(croppedCanvas.toDataURL(), `${componentType.value}_${componentId}.jpg`)
+            });
+            
+            // Update UI
+            updateCroppedItems();
+            
+            // Enable save button
+            saveComponentsBtn.disabled = false;
+            clearAllBtn.disabled = false;
+        }
+        
+        function resetCropper() {
+            if (cropper) {
+                cropper.reset();
+            }
+        }
+        
+        function updateCroppedItems() {
+            if (croppedComponents.length === 0) {
+                noComponentsMessage.style.display = 'block';
+                croppedItems.innerHTML = '';
+                return;
+            }
+            
+            noComponentsMessage.style.display = 'none';
+            croppedItems.innerHTML = '';
+            
+            croppedComponents.forEach((component, index) => {
+                const item = document.createElement('div');
+                item.className = 'cropped-item';
+                item.innerHTML = `
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-info me-2">${component.type}</span>
+                        <span class="text-light">Component #${index + 1}</span>
+                        <button class="btn btn-sm btn-outline-danger ms-auto delete-component" data-id="${component.id}">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                    <div class="text-center">
+                        <img src="${component.dataUrl}" class="img-fluid rounded" style="max-height: 150px;" alt="Cropped Component">
+                    </div>
+                `;
+                croppedItems.appendChild(item);
+            });
+            
+            // Add delete handlers
+            document.querySelectorAll('.delete-component').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    croppedComponents = croppedComponents.filter(c => c.id !== id);
+                    updateCroppedItems();
+                    
+                    if (croppedComponents.length === 0) {
+                        saveComponentsBtn.disabled = true;
+                        clearAllBtn.disabled = true;
+                    }
+                });
+            });
+        }
+        
+        function clearAllComponents() {
+            if (confirm('Are you sure you want to clear all cropped components?')) {
+                croppedComponents = [];
+                updateCroppedItems();
+                saveComponentsBtn.disabled = true;
+                clearAllBtn.disabled = true;
+            }
+        }
+        
+        function saveAllComponents() {
+            if (croppedComponents.length === 0) {
+                alert('No components to save');
+                return;
+            }
+            
+            // Create form data to submit components
+            const formData = new FormData();
+            
+            croppedComponents.forEach((component, index) => {
+                formData.append(`component_${index}_type`, component.type);
+                formData.append(`component_${index}_file`, component.file);
+            });
+            
+            // Show loading
+            showLoading('Saving components...');
+            
+            // Send to server
+            fetch('/save-manual-components', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.success) {
+                    alert('Components saved successfully!');
+                    // Redirect to results page
+                    window.location.href = '/results';
+                } else {
+                    alert('Error saving components: ' + data.error);
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                alert('Error saving components: ' + error);
+            });
+        }
+        
+        // Helper function to convert data URL to File
+        function dataURLtoFile(dataurl, filename) {
+            const arr = dataurl.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            
+            return new File([u8arr], filename, { type: mime });
+        }
+    });
+</script>
+{% endblock %}
