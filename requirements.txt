@@ -1,2 +1,10 @@
-flask = 3.0.3
-pandas==2.3.0
+flask
+pandas
+tqdm
+torch
+sentence-transformers
+faiss-cpu
+Pillow
+clip-anytorch
+ultralytics
+opencv-python
