@@ -8,3 +8,4 @@ Pillow
 clip-anytorch
 ultralytics
 opencv-python
+gunicorn
